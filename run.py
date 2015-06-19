@@ -29,11 +29,6 @@ def test_message(json):
     emit('df', {'data': make_df(json['r'], json['c']).to_dict('split')['data']})
 
 
-@socketio.on('broadcast', namespace='/test')
-def test_message(message):
-    emit('my response', {'data': message['data'].upper()}, broadcast=True)
-
-
 @socketio.on('broadcast', namespace="/chat")
 def chat(message):
     resp = {"name": message['data'].get("name") or "ANON",
@@ -51,13 +46,14 @@ def messages():
     emit('my response', {'data': chats})
 
 
-@socketio.on("forcerefresh", namespace="/chat")
-def refreshclients():
-    send("forcerefresh")
-
 @socketio.on('connect', namespace='/chat')
 def test_connect():
     print('Client connected')
+
+
+@socketio.on("forcerefresh", namespace="/chat")
+def refresh():
+    emit("forcerefresh", {}, broadcast=True)
 
 
 @socketio.on('disconnect', namespace='/chat')

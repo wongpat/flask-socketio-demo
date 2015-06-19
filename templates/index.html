@@ -50,13 +50,25 @@
                     var hash = this.hashCode() + this.length * 4;
                     var hsl = "color: hsl(" + hash % 255 + ", 60%, 50%)";
                     return '<span style="' + hsl + '">' + this + '</span>';
-                }
+                };
+
+                if (typeof String.prototype.endsWith !== 'function') {
+                  String.prototype.endsWith = function(str) {
+                    return this.substring(this.length - str.length, this.length) === str;
+                  }
+                };
+
+                if (typeof String.prototype.startsWith !== 'function') {
+                  String.prototype.startsWith = function(str) {
+                    return this.substring(0, str.length) === str;
+                  }
+                };
 
                 function dosubmit(e) {
                     if (e)
                         e.preventDefault();
-                    var name = $("#name").val();
-                    var content = $("#content").val();
+                    var name = strip($("#name").val());
+                    var content = strip($("#content").val());
                     if (content && content !== "\n") {
                         socket.emit("broadcast", {
                             data: {
@@ -70,7 +82,7 @@
                 function linkify(m) {
                     var l = m;
                     l = m.replace(/(<script.*|<\/script>)/g, "");
-                    if (m.indexOf("http://") === 0) {
+                    if (m.startsWith("http://") || m.startsWith("https://")) {
                         m = m.replace("<br />", "");
                         l = '<a href="' + m + '">' + m + '</a><br />';
                         if (m.endsWith(".jpg") ||
@@ -82,14 +94,20 @@
                     return l;
                 }
 
-                var socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
+                function strip(html) {
+                   var tmp = document.createElement("DIV");
+                   tmp.innerHTML = html;
+                   return tmp.textContent || tmp.innerText || "";
+                }
+
+                var socket = io.connect('http://' + document.domain + ":" + location.port + "/chat");
                 socket.on('my response', function(msg) {
                     var chats = msg.data;
                     chats.forEach(function(data) {
-                        if (data.message[data.message.length-1] != '\n') {
+                        if (data.message[data.message.length-1] != "\n") {
                             data.message += "\n";
                         }
-                        var m = linkify(data.message.replace(/\n/g, "<br />"));
+                        var m = linkify(strip(data.message).replace(/\n/g, "<br />"));
                         $('#log').append("[" + data.timestamp + "] " + data.name.colorize() + ": " + m);
                     });
                     var div = document.getElementById("log");
@@ -104,6 +122,10 @@
 
                 socket.on("disconnect", function() {
                     $("h3").html("GhettoChat - DOWN!");
+                });
+
+                socket.on("forcerefresh", function(msg) {
+                    window.location.reload(true);
                 });
 
                 $("#chatform").submit(dosubmit);
