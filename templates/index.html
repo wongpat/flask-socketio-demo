@@ -1,0 +1,52 @@
+<html>
+    <head>
+        <style>
+            table {
+                font-family: "Menlo", monospace;
+                width: 100%;
+            }
+
+            td {
+                border: 1px solid #eee;
+            }
+
+            .up { color: green; }
+            .down { color: red; }
+            .right { text-align: right; }
+        </style>
+    </head>
+    <body>
+        <h1>Websockets Demo</h1>
+
+        <div id="log" style="border: 1px solid #999">
+            <h4>Received</h4>
+        </div>
+        <hr />
+        <div id="dataframe"></div>
+        <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+        <!--<script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>-->
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+
+        <script>
+            $(function() {
+                var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+                socket.on('my response', function(msg) {
+                    $('#log').html('<pre>' + JSON.stringify(msg, null, 2) + '</pre>');
+                    setInterval(function() {
+                        socket.emit('df', {r: 35, c: 10});
+                    }, 100);
+                });
+
+                socket.on("df", function(msg) {
+                    var trs = msg.data.map(function(row) {
+                        return "<tr>" + row.map(function(cell) {
+                            var cls = (cell < 0) ? "down" : "up";
+                            return '<td class="' + cls + ' right">' + cell.toFixed(2) + "</td>" }
+                        ).join('') + "</tr>";
+                    }).join("");
+                    $("#dataframe").html('<table>' + trs + "</table>");
+                });
+            });
+        </script>
+    </body>
+</html>
