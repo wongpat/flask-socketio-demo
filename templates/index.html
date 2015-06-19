@@ -1,51 +1,124 @@
 <html>
     <head>
+        <title>GhettoChat</title>
         <style>
-            table {
-                font-family: "Menlo", monospace;
+            @import url(http://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900);
+            body {
+                font-family: 'Roboto', sans-serif;
+            }
+
+            .chat {
+                border: 1px solid #aaa;
+                height: 75%;
+                overflow-y: scroll;
+            }
+
+            textarea {
                 width: 100%;
+                height: 12%;
             }
-
-            td {
-                border: 1px solid #eee;
-            }
-
-            .up { color: green; }
-            .down { color: red; }
-            .right { text-align: right; }
         </style>
     </head>
     <body>
-        <h1>Websockets Demo</h1>
+        <form id="chatform">
+            <h3>GhettoChat</h3>
+            <input type="text" id="name" placeholder="Name" width="10%">
+            <hr />
+            <div id="log" class="chat"></div>
+            <hr />
+            <textarea id="content" placeholder="Message Here" required></textarea>
+        </form>
 
-        <div id="log" style="border: 1px solid #999">
-            <h4>Received</h4>
-        </div>
-        <hr />
-        <div id="dataframe"></div>
         <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
         <!--<script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>-->
         <script src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
 
         <script>
             $(function() {
-                var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+                String.prototype.hashCode = function() {
+                  var hash = 0, i, chr, len;
+                  if (this.length == 0) return hash;
+                  for (i = 0, len = this.length; i < len; i++) {
+                    chr   = this.charCodeAt(i);
+                    hash  = ((hash << 5) - hash) + chr;
+                    hash |= 0; // Convert to 32bit integer
+                  }
+                  return hash;
+                };
+
+                String.prototype.colorize = function() {
+                    var hash = this.hashCode() + this.length * 4;
+                    var hsl = "color: hsl(" + hash % 255 + ", 60%, 50%)";
+                    return '<span style="' + hsl + '">' + this + '</span>';
+                }
+
+                function dosubmit(e) {
+                    if (e)
+                        e.preventDefault();
+                    var name = $("#name").val();
+                    var content = $("#content").val();
+                    if (content && content !== "\n") {
+                        socket.emit("broadcast", {
+                            data: {
+                                name: name,
+                                content: content
+                            }
+                        });
+                    }
+                }
+
+                function linkify(m) {
+                    var l = m;
+                    l = m.replace(/(<script.*|<\/script>)/g, "");
+                    if (m.indexOf("http://") === 0) {
+                        m = m.replace("<br />", "");
+                        l = '<a href="' + m + '">' + m + '</a><br />';
+                        if (m.endsWith(".jpg") ||
+                            m.endsWith(".gif") ||
+                            m.endsWith(".png")) {
+                                l = '<img src="' + m + '" /><br />';
+                        }
+                    }
+                    return l;
+                }
+
+                var socket = io.connect('http://' + document.domain + ':' + location.port + '/chat');
                 socket.on('my response', function(msg) {
-                    $('#log').html('<pre>' + JSON.stringify(msg, null, 2) + '</pre>');
-                    setInterval(function() {
-                        socket.emit('df', {r: 35, c: 10});
-                    }, 100);
+                    var chats = msg.data;
+                    chats.forEach(function(data) {
+                        if (data.message[data.message.length-1] != '\n') {
+                            data.message += "\n";
+                        }
+                        var m = linkify(data.message.replace(/\n/g, "<br />"));
+                        $('#log').append("[" + data.timestamp + "] " + data.name.colorize() + ": " + m);
+                    });
+                    var div = document.getElementById("log");
+                    div.scrollTop = div.scrollHeight;
                 });
 
-                socket.on("df", function(msg) {
-                    var trs = msg.data.map(function(row) {
-                        return "<tr>" + row.map(function(cell) {
-                            var cls = (cell < 0) ? "down" : "up";
-                            return '<td class="' + cls + ' right">' + cell.toFixed(2) + "</td>" }
-                        ).join('') + "</tr>";
-                    }).join("");
-                    $("#dataframe").html('<table>' + trs + "</table>");
+                socket.on("connect", function() {
+                    $("h3").html("GhettoChat - ON!");
+                    socket.emit("all");
+                    $("#log").html("");
                 });
+
+                socket.on("disconnect", function() {
+                    $("h3").html("GhettoChat - DOWN!");
+                });
+
+                $("#chatform").submit(dosubmit);
+                $("#content").on("keyup", function(e) {
+                    if (e.which === 13 && !e.shiftKey) {
+                        dosubmit()
+                        $(this).val('');
+                    }
+                });
+                $("#name").val(localStorage["name"]);
+                $("#name").on("keyup", function(e) {
+                    localStorage["name"] = $(this).val();
+                });
+
+                window.chatsocket = socket;
             });
         </script>
     </body>
