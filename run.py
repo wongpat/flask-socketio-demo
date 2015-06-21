@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit, send
+from collections import Counter, defaultdict
+from flask import Flask, render_template, send_from_directory, session
+from flask.ext.socketio import SocketIO, emit, join_room, leave_room, send
+from uuid import uuid4
 
 import json
 import logging
-import numpy as np
-import pandas as pd
 import datetime as dt
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'ccct!!!!'
+app.debug = True
 socketio = SocketIO(app)
-logging.basicConfig(level=logging.DEBUG)
-
+logging.basicConfig(level=logging.INFO)
 chats = []
-
-def make_df(rows=5, cols=5):
-    return pd.DataFrame(np.random.randn(rows, cols))
+users = {}
+active_users = Counter()
+typers = defaultdict(set)
 
 
 @app.route('/')
@@ -24,41 +25,84 @@ def index():
     return render_template('index.html')
 
 
-@socketio.on('df', namespace="/test")
-def test_message(json):
-    emit('df', {'data': make_df(json['r'], json['c']).to_dict('split')['data']})
+@app.route('/js/<path:path>')
+def send_js(path):
+    return send_from_directory('', path)
 
 
 @socketio.on('broadcast', namespace="/chat")
 def chat(message):
+    room = message['data'].get("room", "General")
     resp = {"name": message['data'].get("name") or "ANON",
             "timestamp": dt.datetime.now().isoformat(),
+            "room": room,
             "message": message['data'].get('content')}
     chats.append(resp)
-    print "[%(name)s] %(timestamp)s: %(message)s" % resp
     with open('cache.json', 'w+') as f:
         json.dump(chats, f)
-    emit('my response', {'data': [resp]}, broadcast=True)
+    emit('my response', {'data': [resp]}, room=room)
 
 
-@socketio.on("all", namespace="/chat")
-def messages():
-    emit('my response', {'data': chats})
+@socketio.on("join", namespace="/chat")
+def on_join(message):
+    print "JOIN", session['id'], message
+    room = message['room']
+    name = message['name']
+    join_room(room)
+    users[session['id']] = name
+    active_users[name] += 1
+    if not message.get('reconnect', False):
+        emit('my response', {'data': [c for c in chats if c.get("room", "General") == room][-500:]})
+    emit('join', {'data': {
+        'name': name, 
+        'room': room,
+        'timestamp': dt.datetime.now().isoformat()
+    }}, room=room)
+
+
+@socketio.on("leave", namespace="/chat")
+def on_leave(message):
+    room = message['room']
+    name = message['name']
+    leave_room(room)    
+    print name, "has left the chat"
+    emit('leave', {'data': {
+        'name': name, 
+        'room': room,
+        'timestamp': dt.datetime.now().isoformat()
+    }}, room=room)
 
 
 @socketio.on('connect', namespace='/chat')
 def test_connect():
-    print('Client connected')
+    session['id'] = uuid4()
+    print 'Client connected', session['id']
 
 
-@socketio.on("forcerefresh", namespace="/chat")
-def refresh():
-    emit("forcerefresh", {}, broadcast=True)
+@socketio.on("typing", namespace="/chat")
+def typing(message):
+    room = message['room']
+    name = message['name']
+    status = message['typing']
+    if status:
+        typers[room].add(name)
+    else:
+        typers[room].discard(name)
+    emit('typing', {'data': list(typers[room]), 'room': room}, room=room)
 
 
 @socketio.on('disconnect', namespace='/chat')
 def test_disconnect():
-    print('Client disconnected')
+    global active_users
+    print 'Disconnect', session['id']
+    user = users.pop(session['id'], None)
+    active_users[user] -= 1    
+    if active_users[user] <= 0:
+        socketio.emit('leave', {'data': {
+            'name': user,
+            'timestamp': dt.datetime.now().isoformat()
+        }}, namespace="/chat")
+    active_users += Counter()
 
 
 if __name__ == '__main__':

@@ -1,147 +1,28 @@
 <html>
     <head>
         <title>GhettoChat</title>
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
         <style>
             @import url(http://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900);
             body {
                 font-family: 'Roboto', sans-serif;
             }
-
-            .chat {
-                border: 1px solid #aaa;
-                height: 75%;
-                overflow-y: scroll;
-            }
-
-            textarea {
-                width: 100%;
-                height: 12%;
-            }
         </style>
     </head>
     <body>
-        <form id="chatform">
-            <h3>GhettoChat</h3>
-            <input type="text" id="name" placeholder="Name" width="10%">
-            <hr />
-            <div id="log" class="chat"></div>
-            <hr />
-            <textarea id="content" placeholder="Message Here" required></textarea>
-        </form>
+        <chat></chat>
 
         <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-        <!--<script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>-->
         <script src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/riot/2.1.0/riot+compiler.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+
+        <script type="riot/tag" src="/js/app.js"></script>
 
         <script>
-            $(function() {
-                String.prototype.hashCode = function() {
-                  var hash = 0, i, chr, len;
-                  if (this.length == 0) return hash;
-                  for (i = 0, len = this.length; i < len; i++) {
-                    chr   = this.charCodeAt(i);
-                    hash  = ((hash << 5) - hash) + chr;
-                    hash |= 0; // Convert to 32bit integer
-                  }
-                  return hash;
-                };
-
-                String.prototype.colorize = function() {
-                    var hash = this.hashCode() + this.length * 4;
-                    var hsl = "color: hsl(" + hash % 255 + ", 60%, 50%)";
-                    return '<span style="' + hsl + '">' + this + '</span>';
-                };
-
-                if (typeof String.prototype.endsWith !== 'function') {
-                  String.prototype.endsWith = function(str) {
-                    return this.substring(this.length - str.length, this.length) === str;
-                  }
-                };
-
-                if (typeof String.prototype.startsWith !== 'function') {
-                  String.prototype.startsWith = function(str) {
-                    return this.substring(0, str.length) === str;
-                  }
-                };
-
-                function dosubmit(e) {
-                    if (e)
-                        e.preventDefault();
-                    var name = strip($("#name").val());
-                    var content = strip($("#content").val());
-                    if (content && content !== "\n") {
-                        socket.emit("broadcast", {
-                            data: {
-                                name: name,
-                                content: content
-                            }
-                        });
-                    }
-                }
-
-                function linkify(m) {
-                    var l = m;
-                    l = m.replace(/(<script.*|<\/script>)/g, "");
-                    if (m.startsWith("http://") || m.startsWith("https://")) {
-                        m = m.replace("<br />", "");
-                        l = '<a href="' + m + '">' + m + '</a><br />';
-                        if (m.endsWith(".jpg") ||
-                            m.endsWith(".gif") ||
-                            m.endsWith(".png")) {
-                                l = '<img src="' + m + '" /><br />';
-                        }
-                    }
-                    return l;
-                }
-
-                function strip(html) {
-                   var tmp = document.createElement("DIV");
-                   tmp.innerHTML = html;
-                   return tmp.textContent || tmp.innerText || "";
-                }
-
-                var socket = io.connect('http://' + document.domain + ":" + location.port + "/chat");
-                socket.on('my response', function(msg) {
-                    var chats = msg.data;
-                    chats.forEach(function(data) {
-                        if (data.message[data.message.length-1] != "\n") {
-                            data.message += "\n";
-                        }
-                        var m = linkify(strip(data.message).replace(/\n/g, "<br />"));
-                        $('#log').append("[" + data.timestamp + "] " + data.name.colorize() + ": " + m);
-                    });
-                    var div = document.getElementById("log");
-                    div.scrollTop = div.scrollHeight;
-                });
-
-                socket.on("connect", function() {
-                    $("h3").html("GhettoChat - ON!");
-                    socket.emit("all");
-                    $("#log").html("");
-                });
-
-                socket.on("disconnect", function() {
-                    $("h3").html("GhettoChat - DOWN!");
-                });
-
-                socket.on("forcerefresh", function(msg) {
-                    window.location.reload(true);
-                });
-
-                $("#chatform").submit(dosubmit);
-                $("#content").on("keyup", function(e) {
-                    if (e.which === 13 && !e.shiftKey) {
-                        dosubmit()
-                        $(this).val('');
-                    }
-                });
-                $("#name").val(localStorage["name"]);
-                $("#name").on("keyup", function(e) {
-                    localStorage["name"] = $(this).val();
-                });
-
-                window.chatsocket = socket;
-            });
+            riot.mount('chat');
         </script>
     </body>
 </html>
