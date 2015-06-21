@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from collections import Counter, defaultdict
-from flask import Flask, render_template, send_from_directory, session
+from flask import Flask, render_template, send_from_directory, session, jsonify
 from flask.ext.socketio import SocketIO, emit, join_room, leave_room, send
 from uuid import uuid4
 
@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 chats = []
 users = {}
 active_users = Counter()
+rooms = defaultdict(Counter)
 typers = defaultdict(set)
 
 
@@ -25,8 +26,18 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/history')
+def history():
+    return jsonify({'data': chats})
+
+
 @app.route('/js/<path:path>')
 def send_js(path):
+    return send_from_directory('', path)
+
+
+@app.route('/css/<path:path>')
+def send_css(path):
     return send_from_directory('', path)
 
 
@@ -51,12 +62,17 @@ def on_join(message):
     join_room(room)
     users[session['id']] = name
     active_users[name] += 1
+    rooms[room][name] += 1
     if not message.get('reconnect', False):
         emit('my response', {'data': [c for c in chats if c.get("room", "General") == room][-500:]})
     emit('join', {'data': {
         'name': name, 
         'room': room,
         'timestamp': dt.datetime.now().isoformat()
+    }}, room=room)
+    emit('room_members', {'data': {
+        'members': list(set(rooms[room])), 
+        'room': room
     }}, room=room)
 
 
@@ -66,10 +82,16 @@ def on_leave(message):
     name = message['name']
     leave_room(room)    
     print name, "has left the chat"
+    rooms[room][name] -= 1
+    rooms[room] += Counter()
     emit('leave', {'data': {
         'name': name, 
         'room': room,
         'timestamp': dt.datetime.now().isoformat()
+    }}, room=room)
+    emit('room_members', {'data': {
+        'members': list(set(rooms[room])), 
+        'room': room
     }}, room=room)
 
 
@@ -88,21 +110,32 @@ def typing(message):
         typers[room].add(name)
     else:
         typers[room].discard(name)
-    emit('typing', {'data': list(typers[room]), 'room': room}, room=room)
+    emit('typing', {'data': {
+        'members': list(typers[room]), 
+        'room': room
+    }}, room=room)
 
 
 @socketio.on('disconnect', namespace='/chat')
 def test_disconnect():
     global active_users
-    print 'Disconnect', session['id']
     user = users.pop(session['id'], None)
-    active_users[user] -= 1    
+    active_users[user] -= 1   
+    active_users += Counter()
+    print 'Disconnect', user, session['id'] 
+    for room, members in rooms.viewitems():
+        if active_users[user] <= 0:
+            del members[user]
+            socketio.emit('room_members', {'data': {
+                'room': room,
+                'members': list(set(members))
+            }}, room=room, namespace="/chat")
+            typers[room].discard(user)
     if active_users[user] <= 0:
         socketio.emit('leave', {'data': {
             'name': user,
             'timestamp': dt.datetime.now().isoformat()
         }}, namespace="/chat")
-    active_users += Counter()
 
 
 if __name__ == '__main__':

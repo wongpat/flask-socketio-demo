@@ -1,141 +1,20 @@
-<raw>
+riot.tag('raw', '', function(opts) {
     this.root.innerHTML = opts.content;
-</raw>
 
-<status>
-    <nav class="navbar navbar-default">
-      <div class="container-fluid">
-        <div class="navbar-header pull-left">
-            <a class="navbar-brand" href="#">GhettoChat</a>       
-        </div>
-        <div class="navbar-header pull-right">
-            <p class="navbar-text">{ parent.nickname } | Status: 
-                <span class=" text-{success: connected, danger: !connected}">
-                    { (connected) ? 'ONLINE' : 'OFFLINE' }
-                </span>
-            </p>
-        </div>
-      </div>
-    </nav>
+});
+
+riot.tag('status', '<nav class="navbar navbar-default"> <div class="container-fluid"> <div class="navbar-header pull-left"> <a class="navbar-brand" href="#">GhettoChat</a> </div> <div class="navbar-header pull-right"> <p class="navbar-text">{ parent.nickname } | Status: <span class=" text-{success: connected, danger: !connected}"> { (connected) ? \'ONLINE\' : \'OFFLINE\' } </span> </p> </div> </div> </nav>', function(opts) {
 
     this.connected = false;
     this.reconnecting = false;
-</status>
 
-<welcome>
-    <div class="overlay"></div>
-    <div class="panel panel-default" id="nameform">
-        <div class="panel-heading">
-            <h3 class="panel-title">Enter your name</h3>
-        </div>
-        <form onsubmit={ parent.join }>
-            <div class="panel-body">
-                <input type="text" class="form-control" id="nickname" value={ localStorage['name'] } 
-                    required autofocus/>
-            </div>
-            <div class="panel-footer">
-                <input type="submit" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+});
 
-    <style>
-        #nameform {
-            position: fixed;
-            top: 10vh;
-            left: 50%;
-            z-index: 11;
-            margin-left: -150px;
-            width: 300px;
-        }
+riot.tag('welcome', '<div class="overlay"></div> <div class="panel panel-default" id="nameform"> <div class="panel-heading"> <h3 class="panel-title">Enter your name</h3> </div> <form onsubmit="{ parent.join }"> <div class="panel-body"> <input type="text" class="form-control" id="nickname" value="{ localStorage[\'name\'] }" required autofocus> </div> <div class="panel-footer"> <input type="submit" class="btn btn-primary"> </div> </form> </div>', '#nameform { position: fixed; top: 10vh; left: 50%; z-index: 11; margin-left: -150px; width: 300px; } .overlay { z-index: 10; background-color: rgba(0, 0, 0, 0.5); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; } #nameform form { margin: 0; }', function(opts) {
 
-        .overlay {
-            z-index: 10;
-            background-color: rgba(0, 0, 0, 0.5);
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-        }
+});
 
-        #nameform form {
-            margin: 0;
-        }
-    </style>
-</welcome>
-
-<chat>
-    <status></status>
-    <welcome if={ !nickname }></welcome>
-    <div class="container-fluid" if={ nickname }>
-        <div class="row">
-            <div class="col-xs-10 col-lg-11">
-                <ul class="nav nav-tabs" role="tablist">
-                    <li each={ room, i in rooms }
-                        role="presentation"
-                        class={ active: room == parent.activeRoom }>
-                        <a href="#{room}" 
-                           aria-controls={room} 
-                           data-toggle="tab">{room} 
-                           <small class="text-success" if={ parent.typers[room].length }>
-                                <i class="fa fa-weixin fa-spin"></i> { parent.typers[room].join(', ') }
-                            </small>
-                        </a>
-                    </li>
-                </ul>
-                <div class="tab-content">
-                    <div each={ room, i in rooms } 
-                         class="tab-pane { active: room == parent.activeRoom } chat"
-                         id={ room }>
-                        <p each={ parent.messages[room] }>
-                            <span class="text-muted" if={ timestamp }>[{ moment(timestamp).format('YYYY-MM-DD HH:mm:ss') }]</span>
-                            <raw content={ colorize(name) + ': ' } if={ name }/>
-                            <raw content={ linkify(message) } if={ message }/>
-                            <span class="text-muted" if={ status }>* { status }</p>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xs-2 col-lg-1">
-                <h5>Users</h5>
-                <ul class="list-unstyled" style="font-size: 0.9em">
-                    <li each={ member, i in roomMembers[activeRoom] }>
-                        <i class="fa fa-user"></i> <raw content={ colorize(member) } />
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <textarea class="form-control" id="content" 
-            placeholder="Type message, press Enter to submit" 
-            onkeyup={ prepsubmit }
-            disabled={ !tags.status.connected }
-            required></textarea>
-    </div>
-    
-    <style scoped>
-        .chat {
-            height: 68vmin;
-            overflow-y: scroll;
-            margin-bottom: 10px;
-            padding: 2px 10px;
-        }
-
-        .chat > p {
-            line-height: 1.4em;
-            font-size: 14px;
-            margin: 0;
-        }
-
-        textarea.form-control {
-            height: 13vh;
-        }
-
-        .nav > li > a {
-            font-size: 0.9em;
-            padding: 6px 8px;
-        }
-    </style>
+riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div class="container-fluid" if="{ nickname }"> <div class="row"> <div class="col-xs-10 col-lg-11"> <ul class="nav nav-tabs" role="tablist"> <li each="{ room, i in rooms }" role="presentation" class="{ active: room == parent.activeRoom }"> <a href="#{room}" aria-controls="{room}" data-toggle="tab">{room} <small class="text-success" if="{ parent.typers[room].length }"> <i class="fa fa-weixin fa-spin"></i> { parent.typers[room].join(\', \') } </small> </a> </li> </ul> <div class="tab-content"> <div each="{ room, i in rooms }" class="tab-pane { active: room == parent.activeRoom } chat" id="{ room }"> <p each="{ parent.messages[room] }"> <span class="text-muted" if="{ timestamp }">[{ moment(timestamp).format(\'YYYY-MM-DD HH:mm:ss\') }]</span> <raw content="{ colorize(name) + \': \' }" if="{ name }"></raw> <raw content="{ linkify(message) }" if="{ message }"></raw> <span class="text-muted" if="{ status }">* { status }</p> </p> </div> </div> </div> <div class="col-xs-2 col-lg-1"> <h5>Users</h5> <ul class="list-unstyled" style="font-size: 0.9em"> <li each="{ member, i in roomMembers[activeRoom] }"> <i class="fa fa-user"></i> <raw content="{ colorize(member) }"></raw> </li> </ul> </div> </div> <textarea class="form-control" id="content" placeholder="Type message, press Enter to submit" onkeyup="{ prepsubmit }" __disabled="{ !tags.status.connected }" required></textarea> </div>', 'chat .chat , [riot-tag="chat"] .chat { height: 68vmin; overflow-y: scroll; margin-bottom: 10px; padding: 2px 10px; } chat .chat > p , [riot-tag="chat"] .chat > p { line-height: 1.4em; font-size: 14px; margin: 0; } chat textarea.form-control , [riot-tag="chat"] textarea.form-control { height: 13vh; } chat .nav > li > a , [riot-tag="chat"] .nav > li > a { font-size: 0.9em; padding: 6px 8px; }', function(opts) {
 
     this.version = opts.version;
     this.socket = null;
@@ -147,7 +26,7 @@
     this.activeRoom = "General";
     var that = this;
 
-    dosubmit() {
+    this.dosubmit = function() {
         var name = strip(this.nickname);
         var content = strip(this.content.value);
         if (content && content !== "\n") {
@@ -159,17 +38,17 @@
                 }
             });
         }       
-    }
+    }.bind(this);
 
-    isConnected() {
+    this.isConnected = function() {
         return this.tags.status.connected;
-    }
+    }.bind(this);
 
-    isReconnecting() {
+    this.isReconnecting = function() {
         return this.tags.status.reconnecting;
-    }
+    }.bind(this);
 
-    _signalTyping(state) {
+    this._signalTyping = function(state) {
         if (!state || this.typers[this.activeRoom].indexOf(this.nickname) < 0) {
             this.socket.emit("typing", {
                 name: this.nickname,
@@ -181,11 +60,11 @@
             clearTimeout(this.revertTyping);
             this.revertTyping = _.delay(this._signalTyping, 2500, false);
         }
-    }
+    }.bind(this);
 
     this.signalTyping = _.debounce(this._signalTyping, 100, true);
 
-    prepsubmit(e) {
+    this.prepsubmit = function(e) {
         if (e.which === 13 && !e.shiftKey) {
             this.dosubmit();
             e.currentTarget.value = "";
@@ -194,9 +73,9 @@
         } else if (!e.altKey && !e.metaKey && !e.ctrlKey) {
             this.signalTyping(true);
         }
-    }
+    }.bind(this);
 
-    pushStatus(room, text, doScroll, timestamp) {
+    this.pushStatus = function(room, text, doScroll, timestamp) {
         this.messages[room].push({
             status: text,
             timestamp: timestamp
@@ -206,9 +85,9 @@
             var dom = this[this.activeRoom];
             dom.scrollTop = dom.scrollHeight * 3;
         }        
-    }
+    }.bind(this);
 
-    join(e) {
+    this.join = function(e) {
         e.preventDefault();
         this.nickname = localStorage["name"] = $("input", e.target).val();
         this.socket.emit("join", {
@@ -216,7 +95,7 @@
             room: "General",
             reconnect: that.tags.status.reconnecting || false
         });
-    }
+    }.bind(this);
 
     this.on("mount", function() {
         this.socket = io.connect('http://' + document.domain + ":" + location.port + "/chat");
@@ -293,7 +172,8 @@
             e.target.scrollTop = e.target.scrollHeight;
         });
     })
-</chat>
+
+});
 
 function parse_youtube(url) {
     var a = document.createElement("a");
