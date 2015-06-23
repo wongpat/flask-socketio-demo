@@ -14,7 +14,7 @@ riot.tag('welcome', '<div class="overlay"></div> <div class="panel panel-default
 
 });
 
-riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div class="container-fluid" if="{ nickname }"> <div class="row"> <div class="col-xs-10 col-lg-11"> <ul class="nav nav-tabs" role="tablist"> <li each="{ room, i in rooms }" role="presentation" class="{ active: room == parent.activeRoom }"> <a href="#{room}" aria-controls="{room}" data-toggle="tab">{room} <small class="text-success" if="{ parent.typers[room].length }"> <i class="fa fa-weixin fa-spin"></i> { parent.typers[room].join(\', \') } </small> </a> </li> </ul> <div class="tab-content"> <div each="{ room, i in rooms }" class="tab-pane { active: room == parent.activeRoom } chat" id="{ room }"> <p each="{ parent.messages[room] }"> <span class="text-muted" if="{ timestamp }">[{ moment(timestamp).format(\'YYYY-MM-DD HH:mm:ss\') }]</span> <raw content="{ colorize(name) + \': \' }" if="{ name }"></raw> <raw content="{ linkify(message) }" if="{ message }"></raw> <span class="text-muted" if="{ status }">* { status }</p> </p> </div> </div> </div> <div class="col-xs-2 col-lg-1"> <h5>Users</h5> <ul class="list-unstyled" style="font-size: 0.9em"> <li each="{ member, i in roomMembers[activeRoom] }"> <i class="fa fa-user"></i> <raw content="{ colorize(member) }"></raw> </li> </ul> </div> </div> <textarea class="form-control" id="content" placeholder="Type message, press Enter to submit" onkeyup="{ prepsubmit }" __disabled="{ !tags.status.connected }" required></textarea> </div>', 'chat .chat , [riot-tag="chat"] .chat { height: 68vmin; overflow-y: scroll; margin-bottom: 10px; padding: 2px 10px; } chat .chat > p , [riot-tag="chat"] .chat > p { line-height: 1.4em; font-size: 14px; margin: 0; } chat textarea.form-control , [riot-tag="chat"] textarea.form-control { height: 13vh; } chat .nav > li > a , [riot-tag="chat"] .nav > li > a { font-size: 0.9em; padding: 6px 8px; }', function(opts) {
+riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div class="container-fluid" if="{ nickname }"> <div class="row"> <div class="col-xs-10 col-lg-11"> <ul class="nav nav-tabs" role="tablist"> <li each="{ room, i in rooms }" role="presentation" class="{ active: room == parent.activeRoom }"> <a href="#{room}" aria-controls="{room}" data-toggle="tab">{room} <small class="text-success" if="{ parent.typers[room].length }"> <i class="fa fa-weixin fa-spin"></i> { parent.typers[room].join(\', \') } </small> </a> </li> </ul> <div class="tab-content"> <div each="{ room, i in rooms }" class="tab-pane { active: room == parent.activeRoom } chat" id="{ room }"> <p each="{ parent.messages[room] }"> <span class="text-muted" if="{ timestamp }">[{ moment(timestamp).format(\'YYYY-MM-DD HH:mm:ss\') }]</span> <raw content="{ colorize(name) + \': \' }" if="{ name }"></raw> <raw content="{ linkify(message) }" if="{ message }"></raw> <span class="text-muted" if="{ status }">* { status }</p> </p> </div> </div> </div> <div class="col-xs-2 col-lg-1"> <h5>Users</h5> <ul class="list-unstyled" style="font-size: 0.9em"> <li each="{ member, i in roomMembers[activeRoom] }"> <i class="fa fa-user"></i> <raw content="{ colorize(member) }"></raw> </li> </ul> </div> </div> <textarea class="form-control" id="content" placeholder="Type message, press Enter to submit" onkeyup="{ prepsubmit }" __disabled="{ !tags.status.connected }" required></textarea> </div>', 'chat .chat , [riot-tag="chat"] .chat { height: 68vmin; overflow-y: scroll; margin-bottom: 10px; padding: 2px 10px; border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; } chat .chat > p , [riot-tag="chat"] .chat > p { line-height: 1.4em; font-size: 14px; margin: 0; } chat textarea.form-control , [riot-tag="chat"] textarea.form-control { height: 13vh; } chat .nav > li > a , [riot-tag="chat"] .nav > li > a { font-size: 0.9em; padding: 6px 8px; }', function(opts) {
 
     this.version = opts.version;
     this.socket = null;
@@ -24,6 +24,7 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
     this.typers = {"General": []};
     this.nickname = "";
     this.activeRoom = "General";
+    this.embed = true;
     var that = this;
 
     this.dosubmit = function() {
@@ -37,7 +38,7 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
                     room: this.activeRoom
                 }
             });
-        }       
+        }
     }.bind(this);
 
     this.isConnected = function() {
@@ -46,6 +47,10 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
 
     this.isReconnecting = function() {
         return this.tags.status.reconnecting;
+    }.bind(this);
+
+    this.toggleEmbed = function() {
+        this.update({embed: !this.embed});
     }.bind(this);
 
     this._signalTyping = function(state) {
@@ -62,14 +67,14 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
         }
     }.bind(this);
 
-    this.signalTyping = _.debounce(this._signalTyping, 100, true);
+    this.signalTyping = _.debounce(this._signalTyping, 200, true);
 
     this.prepsubmit = function(e) {
         if (e.which === 13 && !e.shiftKey) {
             this.dosubmit();
             e.currentTarget.value = "";
             clearTimeout(this.revertTyping);
-            this._signalTyping(false);          
+            this._signalTyping(false);
         } else if (!e.altKey && !e.metaKey && !e.ctrlKey) {
             this.signalTyping(true);
         }
@@ -84,7 +89,7 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
         if (doScroll) {
             var dom = this[this.activeRoom];
             dom.scrollTop = dom.scrollHeight * 3;
-        }        
+        }
     }.bind(this);
 
     this.join = function(e) {
@@ -100,6 +105,10 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
     this.on("mount", function() {
         this.socket = io.connect('http://' + document.domain + ":" + location.port + "/chat");
         this.socket.on('my response', function(msg) {
+            if (!document.hasFocus() && msg.data.length === 1) {
+                var m = msg.data[0];
+                notify(m.name, m.message, true);
+            }
             var oneMessageInCurrentWindow = false;
             msg.data.forEach(function(message) {
                 var room = message.room || "General";
@@ -110,13 +119,13 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
                 }
                 oneMessageInCurrentWindow |= (room === that.activeRoom);
                 group.push(message);
-            });    
-            that.update();      
+            });
+            that.update();
             if (oneMessageInCurrentWindow) {
                 var dom = that[that.activeRoom];
                 dom.scrollTop = dom.scrollHeight * 3;
             }
-        }); 
+        });
 
         this.socket.on("join", function(message) {
             if (message.data.name !== that.tags.status.nickname) {
@@ -125,7 +134,7 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
                     message.data.room === that.activeRoom,
                     message.data.timestamp
                 );
-            }          
+            }
         });
 
         this.socket.on("leave", function(message) {
@@ -137,8 +146,7 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
         });
 
         this.socket.on("room_members", function(message) {
-            console.debug(message.data.members);
-            that.roomMembers[message.data.room] = message.data.members;
+            that.roomMembers[message.data.room] = message.data.members.sort();
             that.update();
         })
 
@@ -161,7 +169,7 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
                 });
             }
             that.tags.status.update({connected: true, reconnecting: false});
-        });       
+        });
 
         this.socket.on("disconnect", function() {
             that.tags.status.update({connected: false, reconnecting: true});
@@ -193,11 +201,11 @@ function linkify(m) {
             l = '<img src="' + chk + '" />';
         }
         // Youtube embed
-        if ((chk.indexOf("youtube") > 0 && chk.indexOf("watch") > 0) || 
+        if ((chk.indexOf("youtube") > 0 && chk.indexOf("watch") > 0) ||
             chk.indexOf("youtu.be") > 0) {
             l = [//'<div class="embed-responsive embed-responsive-16by9">',
-                 '<iframe class="embed-responsive-item" width="560" height="315" src="', 
-                 parse_youtube(chk), 
+                 '<iframe class="embed-responsive-item" width="560" height="315" src="',
+                 parse_youtube(chk),
                  '" allowfullscreen></iframe>'].join("");
         }
     }
@@ -212,7 +220,7 @@ function strip(html) {
 
 function colorize(text) {
     var hash = text.hashCode() + text.length * 4;
-    var hsl = "color: hsl(" + hash % 255 + ", 60%, 50%)";
+    var hsl = "color: hsl(" + hash + ", 80%, 40%)";
     return '<span style="' + hsl + '">' + text + '</span>';
 }
 

@@ -6,10 +6,10 @@
     <nav class="navbar navbar-default">
       <div class="container-fluid">
         <div class="navbar-header pull-left">
-            <a class="navbar-brand" href="#">GhettoChat</a>       
+            <a class="navbar-brand" href="#">GhettoChat</a>
         </div>
         <div class="navbar-header pull-right">
-            <p class="navbar-text">{ parent.nickname } | Status: 
+            <p class="navbar-text">{ parent.nickname } | Status:
                 <span class=" text-{success: connected, danger: !connected}">
                     { (connected) ? 'ONLINE' : 'OFFLINE' }
                 </span>
@@ -30,7 +30,7 @@
         </div>
         <form onsubmit={ parent.join }>
             <div class="panel-body">
-                <input type="text" class="form-control" id="nickname" value={ localStorage['name'] } 
+                <input type="text" class="form-control" id="nickname" value={ localStorage['name'] }
                     required autofocus/>
             </div>
             <div class="panel-footer">
@@ -75,9 +75,9 @@
                     <li each={ room, i in rooms }
                         role="presentation"
                         class={ active: room == parent.activeRoom }>
-                        <a href="#{room}" 
-                           aria-controls={room} 
-                           data-toggle="tab">{room} 
+                        <a href="#{room}"
+                           aria-controls={room}
+                           data-toggle="tab">{room}
                            <small class="text-success" if={ parent.typers[room].length }>
                                 <i class="fa fa-weixin fa-spin"></i> { parent.typers[room].join(', ') }
                             </small>
@@ -85,7 +85,7 @@
                     </li>
                 </ul>
                 <div class="tab-content">
-                    <div each={ room, i in rooms } 
+                    <div each={ room, i in rooms }
                          class="tab-pane { active: room == parent.activeRoom } chat"
                          id={ room }>
                         <p each={ parent.messages[room] }>
@@ -106,19 +106,21 @@
                 </ul>
             </div>
         </div>
-        <textarea class="form-control" id="content" 
-            placeholder="Type message, press Enter to submit" 
+        <textarea class="form-control" id="content"
+            placeholder="Type message, press Enter to submit"
             onkeyup={ prepsubmit }
             disabled={ !tags.status.connected }
             required></textarea>
     </div>
-    
+
     <style scoped>
         .chat {
             height: 68vmin;
             overflow-y: scroll;
             margin-bottom: 10px;
             padding: 2px 10px;
+            border-bottom: 1px solid #ddd;
+            border-left: 1px solid #ddd;
         }
 
         .chat > p {
@@ -145,6 +147,7 @@
     this.typers = {"General": []};
     this.nickname = "";
     this.activeRoom = "General";
+    this.embed = true;
     var that = this;
 
     dosubmit() {
@@ -158,7 +161,7 @@
                     room: this.activeRoom
                 }
             });
-        }       
+        }
     }
 
     isConnected() {
@@ -167,6 +170,10 @@
 
     isReconnecting() {
         return this.tags.status.reconnecting;
+    }
+
+    toggleEmbed() {
+        this.update({embed: !this.embed});
     }
 
     _signalTyping(state) {
@@ -183,14 +190,14 @@
         }
     }
 
-    this.signalTyping = _.debounce(this._signalTyping, 100, true);
+    this.signalTyping = _.debounce(this._signalTyping, 200, true);
 
     prepsubmit(e) {
         if (e.which === 13 && !e.shiftKey) {
             this.dosubmit();
             e.currentTarget.value = "";
             clearTimeout(this.revertTyping);
-            this._signalTyping(false);          
+            this._signalTyping(false);
         } else if (!e.altKey && !e.metaKey && !e.ctrlKey) {
             this.signalTyping(true);
         }
@@ -205,7 +212,7 @@
         if (doScroll) {
             var dom = this[this.activeRoom];
             dom.scrollTop = dom.scrollHeight * 3;
-        }        
+        }
     }
 
     join(e) {
@@ -221,6 +228,10 @@
     this.on("mount", function() {
         this.socket = io.connect('http://' + document.domain + ":" + location.port + "/chat");
         this.socket.on('my response', function(msg) {
+            if (!document.hasFocus() && msg.data.length === 1) {
+                var m = msg.data[0];
+                notify(m.name, m.message, true);
+            }
             var oneMessageInCurrentWindow = false;
             msg.data.forEach(function(message) {
                 var room = message.room || "General";
@@ -231,13 +242,13 @@
                 }
                 oneMessageInCurrentWindow |= (room === that.activeRoom);
                 group.push(message);
-            });    
-            that.update();      
+            });
+            that.update();
             if (oneMessageInCurrentWindow) {
                 var dom = that[that.activeRoom];
                 dom.scrollTop = dom.scrollHeight * 3;
             }
-        }); 
+        });
 
         this.socket.on("join", function(message) {
             if (message.data.name !== that.tags.status.nickname) {
@@ -246,7 +257,7 @@
                     message.data.room === that.activeRoom,
                     message.data.timestamp
                 );
-            }          
+            }
         });
 
         this.socket.on("leave", function(message) {
@@ -258,8 +269,7 @@
         });
 
         this.socket.on("room_members", function(message) {
-            console.debug(message.data.members);
-            that.roomMembers[message.data.room] = message.data.members;
+            that.roomMembers[message.data.room] = message.data.members.sort();
             that.update();
         })
 
@@ -282,7 +292,7 @@
                 });
             }
             that.tags.status.update({connected: true, reconnecting: false});
-        });       
+        });
 
         this.socket.on("disconnect", function() {
             that.tags.status.update({connected: false, reconnecting: true});
@@ -313,11 +323,11 @@ function linkify(m) {
             l = '<img src="' + chk + '" />';
         }
         // Youtube embed
-        if ((chk.indexOf("youtube") > 0 && chk.indexOf("watch") > 0) || 
+        if ((chk.indexOf("youtube") > 0 && chk.indexOf("watch") > 0) ||
             chk.indexOf("youtu.be") > 0) {
             l = [//'<div class="embed-responsive embed-responsive-16by9">',
-                 '<iframe class="embed-responsive-item" width="560" height="315" src="', 
-                 parse_youtube(chk), 
+                 '<iframe class="embed-responsive-item" width="560" height="315" src="',
+                 parse_youtube(chk),
                  '" allowfullscreen></iframe>'].join("");
         }
     }
@@ -332,7 +342,7 @@ function strip(html) {
 
 function colorize(text) {
     var hash = text.hashCode() + text.length * 4;
-    var hsl = "color: hsl(" + hash % 255 + ", 60%, 50%)";
+    var hsl = "color: hsl(" + hash + ", 80%, 40%)";
     return '<span style="' + hsl + '">' + text + '</span>';
 }
 
