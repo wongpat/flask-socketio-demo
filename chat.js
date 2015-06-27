@@ -3,18 +3,18 @@ riot.tag('raw', '', function(opts) {
 
 });
 
-riot.tag('status', '<nav class="navbar navbar-default"> <div class="container-fluid"> <div class="navbar-header pull-left"> <a class="navbar-brand" href="#">GhettoChat</a> </div> <div class="navbar-header pull-right"> <p class="navbar-text">{ parent.nickname } | Status: <span class=" text-{success: connected, danger: !connected}"> { (connected) ? \'ONLINE\' : \'OFFLINE\' } </span> </p> </div> </div> </nav>', function(opts) {
+riot.tag('status', '<nav class="navbar navbar-inverse navbar-fixed-top"> <div class="container-fluid"> <div class="navbar-header pull-left"> <a class="navbar-brand" href="#"><i class="fa fa-spin fa-beer"></i> GhettoChat</a> </div> <div class="navbar-header pull-right"> <p class="navbar-text">{ parent.nickname } &middot; ghetto status <span class=" text-{success: connected, danger: !connected}"> <i class="fa fa-thumbs-{up: connected, down: !connected}"></i> </span> </p> </div> </div> </nav>', 'status .navbar-inverse , [riot-tag="status"] .navbar-inverse { background-color: hsla(0, 0%, 0%, 0.7); }', function(opts) {
 
     this.connected = false;
     this.reconnecting = false;
 
 });
 
-riot.tag('welcome', '<div class="overlay"></div> <div class="panel panel-default" id="nameform"> <div class="panel-heading"> <h3 class="panel-title">Enter your name</h3> </div> <form onsubmit="{ parent.join }"> <div class="panel-body"> <input type="text" class="form-control" id="nickname" value="{ localStorage[\'name\'] }" required autofocus> </div> <div class="panel-footer"> <input type="submit" class="btn btn-primary"> </div> </form> </div>', '#nameform { position: fixed; top: 10vh; left: 50%; z-index: 11; margin-left: -150px; width: 300px; } .overlay { z-index: 10; background-color: rgba(0, 0, 0, 0.5); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; } #nameform form { margin: 0; }', function(opts) {
+riot.tag('welcome', '<div class="overlay"></div> <div class="panel panel-default" id="nameform"> <div class="panel-heading"> <h3 class="panel-title">Enter your name</h3> </div> <form onsubmit="{ parent.join }"> <div class="panel-body"> <input type="text" class="form-control" id="nickname" value="{ localStorage[\'name\'] }" required autofocus> </div> <div class="panel-footer"> <input type="submit" class="btn btn-primary"> </div> </form> </div>', '#nameform { position: fixed; top: 10vh; left: 50%; z-index: 1001; margin-left: -150px; width: 300px; } .overlay { z-index: 1000; background-color: rgba(0, 0, 0, 0.5); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; } #nameform form { margin: 0; }', function(opts) {
 
 });
 
-riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div class="container-fluid" if="{ nickname }"> <div class="row"> <div class="col-xs-10 col-lg-11"> <ul class="nav nav-tabs" role="tablist"> <li each="{ room, i in rooms }" role="presentation" class="{ active: room == parent.activeRoom }"> <a href="#{room}" aria-controls="{room}" data-toggle="tab">{room} <small class="text-success" if="{ parent.typers[room].length }"> <i class="fa fa-weixin fa-spin"></i> { parent.typers[room].join(\', \') } </small> </a> </li> </ul> <div class="tab-content"> <div each="{ room, i in rooms }" class="tab-pane { active: room == parent.activeRoom } chat" id="{ room }"> <p each="{ parent.messages[room] }"> <span class="text-muted" if="{ timestamp }">[{ moment(timestamp).format(\'YYYY-MM-DD HH:mm:ss\') }]</span> <raw content="{ colorize(name) + \': \' }" if="{ name }"></raw> <raw content="{ linkify(message) }" if="{ message }"></raw> <span class="text-muted" if="{ status }">* { status }</p> </p> </div> </div> </div> <div class="col-xs-2 col-lg-1"> <h5>Users</h5> <ul class="list-unstyled" style="font-size: 0.9em"> <li each="{ member, i in roomMembers[activeRoom] }"> <i class="fa fa-user"></i> <raw content="{ colorize(member) }"></raw> </li> </ul> </div> </div> <textarea class="form-control" id="content" placeholder="Type message, press Enter to submit" onkeyup="{ prepsubmit }" __disabled="{ !tags.status.connected }" required></textarea> </div>', 'chat .chat , [riot-tag="chat"] .chat { height: 68vmin; overflow-y: scroll; margin-bottom: 10px; padding: 2px 10px; border-bottom: 1px solid #ddd; border-left: 1px solid #ddd; } chat .chat > p , [riot-tag="chat"] .chat > p { line-height: 1.4em; font-size: 14px; margin: 0; } chat textarea.form-control , [riot-tag="chat"] textarea.form-control { height: 13vh; } chat .nav > li > a , [riot-tag="chat"] .nav > li > a { font-size: 0.9em; padding: 6px 8px; }', function(opts) {
+riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div class="container-fluid content" if="{ nickname }"> <div class="row"> <div class="col-xs-10 col-lg-10"> <ul class="nav nav-tabs" role="tablist"> <li each="{ room, i in rooms }" role="presentation" class="{ active: room == parent.activeRoom }"> <a href="#{room}" aria-controls="{room}" data-toggle="tab">{room} <small class="text-success" if="{ parent.typers[room].length }"> <i class="fa fa-weixin fa-spin"></i> { parent.typers[room].join(\', \') } </small> </a> </li> </ul> <div class="tab-content blueglass shadow"> <div each="{ room, i in rooms }" class="tab-pane { active: room == parent.activeRoom } chat" id="{ room }"> <p each="{ parent.messages[room] }"> <span class="text-muted" if="{ timestamp }">[{ moment(timestamp).format(\'YYYY-MM-DD HH:mm:ss\') }]</span> <raw content="{ colorize(name) + \': \' }" if="{ name }"></raw> <raw content="{ linkify(message) }" if="{ message }"></raw> <span class="text-muted" if="{ status }">* { status }</p> </p> </div> </div> </div> <div class="col-xs-2 col-lg-2 blueglass shadow"> <h5>Users</h5> <ul class="list-unstyled" style="font-size: 0.9em"> <li each="{ member, i in roomMembers[activeRoom] }"> <i class="fa fa-user"></i> <raw content="{ colorize(member) }"></raw> </li> </ul> </div> </div> </div> <div class="footer"> <textarea class="dark shadow form-control" id="content" placeholder="Type message, press Enter to submit" onkeyup="{ prepsubmit }" __disabled="{ !isConnected() }" required></textarea> </div>', 'chat .content , [riot-tag="chat"] .content { position: fixed; top: 65; bottom: 100; left: 0; right: 0; z-index: 50; } chat .chat , [riot-tag="chat"] .chat { max-height: 90%; overflow-y: scroll; margin-bottom: 10px; padding: 2px 10px; } chat .footer , [riot-tag="chat"] .footer { position: fixed; bottom: 0; right: 0; left: 0; height: 100px; z-index: 50; } chat .nav-tabs , [riot-tag="chat"] .nav-tabs { border: 0; } chat .nav-tabs > li , [riot-tag="chat"] .nav-tabs > li { margin-bottom: 0; border: 0; border-radius: 0; background-color: } chat .nav-tabs > li > a , [riot-tag="chat"] .nav-tabs > li > a { border: 0; border-radius: 0; background: hsla(0, 0%, 100%, 0.1); } chat .nav-tabs > li:hover > a , [riot-tag="chat"] .nav-tabs > li:hover > a { border: 0; border-radius: 0; background-color: hsla(232, 36%, 30%, 0.5); } chat .nav-tabs > li.active > a , [riot-tag="chat"] .nav-tabs > li.active > a { background-color: hsla(232, 36%, 30%, 0.61); color: #ccc; border: 0; border-radius: 0; } chat .nav-tabs > li.active:hover > a, [riot-tag="chat"] .nav-tabs > li.active:hover > a,chat .nav-tabs > li.active > a:focus , [riot-tag="chat"] .nav-tabs > li.active > a:focus { background-color: hsla(232, 36%, 30%, 0.61); color: #eee; border: 0; } chat .dark , [riot-tag="chat"] .dark { background: hsla(0, 0%, 0%, 0.6); color: #eee; border: 0; } chat .darkish , [riot-tag="chat"] .darkish { background: hsla(0, 0%, 20%, 0.6); color: #eee; border: 0; } chat .blueglass , [riot-tag="chat"] .blueglass { background-color: hsla(232, 36%, 30%, 0.61); color: #ddd; border: 0; } chat .bright , [riot-tag="chat"] .bright { background: hsla(0, 0%, 100%, 0.75); color: #111; border: 0; } chat .form-control , [riot-tag="chat"] .form-control { border-radius: 0; } chat .shadow , [riot-tag="chat"] .shadow { box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25); } chat .chat > p , [riot-tag="chat"] .chat > p { line-height: 1.5em; font-size: 13px; margin: 0; } chat textarea.form-control , [riot-tag="chat"] textarea.form-control { height: 100%; } chat .nav > li > a , [riot-tag="chat"] .nav > li > a { font-size: 0.9em; padding: 6px 8px; } chat .text-muted , [riot-tag="chat"] .text-muted { color: #999; }', function(opts) {
 
     this.version = opts.version;
     this.socket = null;
@@ -67,7 +67,7 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
         }
     }.bind(this);
 
-    this.signalTyping = _.debounce(this._signalTyping, 200, true);
+    this.signalTyping = _.debounce(this._signalTyping, 500, true);
 
     this.prepsubmit = function(e) {
         if (e.which === 13 && !e.shiftKey) {
@@ -87,9 +87,15 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
         });
         this.update();
         if (doScroll) {
-            var dom = this[this.activeRoom];
-            dom.scrollTop = dom.scrollHeight * 3;
+            this.scrollBottom();
         }
+    }.bind(this);
+
+    this.scrollBottom = function() {
+        _.delay(function() {
+            var dom = that[that.activeRoom];
+            dom.scrollTop = dom.scrollHeight;
+        }, 150);
     }.bind(this);
 
     this.join = function(e) {
@@ -118,12 +124,11 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
                     that.messages[message.room] = group;
                 }
                 oneMessageInCurrentWindow |= (room === that.activeRoom);
-                group.push(message);
+                group.push(message);                
             });
             that.update();
             if (oneMessageInCurrentWindow) {
-                var dom = that[that.activeRoom];
-                dom.scrollTop = dom.scrollHeight * 3;
+                that.scrollBottom();
             }
         });
 
@@ -169,15 +174,17 @@ riot.tag('chat', '<status></status> <welcome if="{ !nickname }"></welcome> <div 
                 });
             }
             that.tags.status.update({connected: true, reconnecting: false});
+            that.update();
         });
 
         this.socket.on("disconnect", function() {
             that.tags.status.update({connected: false, reconnecting: true});
+            that.update();
         })
 
         $('a[data-toggle="tab"]').on("shown.bs.tab", function(e) {
             that.activeTab = e.target.getAttribute('id');
-            e.target.scrollTop = e.target.scrollHeight;
+            that.scrollBottom();
         });
     })
 
@@ -198,7 +205,8 @@ function linkify(m) {
     if (chk.startsWith("http://") || chk.startsWith("https://")) {
         l = '<a href="' + chk + '">' + chk + '</a>';
         if (chk.endsWith(".jpg") || chk.endsWith(".gif") || chk.endsWith(".png")) {
-            l = '<img src="' + chk + '" />';
+            l = '<a href="' + chk + '" data-featherlight="image">' + 
+                    '<img src="' + chk + '" style="max-width: 256px; max-height: 192px;" />' + '</a>';
         }
         // Youtube embed
         if ((chk.indexOf("youtube") > 0 && chk.indexOf("watch") > 0) ||
@@ -219,9 +227,9 @@ function strip(html) {
 }
 
 function colorize(text) {
-    var hash = text.hashCode() + text.length * 4;
-    var hsl = "color: hsl(" + hash + ", 80%, 40%)";
-    return '<span style="' + hsl + '">' + text + '</span>';
+    var hash = text.hashCode() + text.length;
+    var hsl = "color: hsl(" + hash + ", 65%, 75%)";
+    return '<strong><span style="' + hsl + '; text-shadow: 0 1px 1px #000;">' + text + '</span></strong>';
 }
 
 String.prototype.hashCode = function() {

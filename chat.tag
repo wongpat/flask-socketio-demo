@@ -3,20 +3,26 @@
 </raw>
 
 <status>
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header pull-left">
-            <a class="navbar-brand" href="#">GhettoChat</a>
+            <a class="navbar-brand" href="#"><i class="fa fa-spin fa-beer"></i> GhettoChat</a>
         </div>
         <div class="navbar-header pull-right">
-            <p class="navbar-text">{ parent.nickname } | Status:
+            <p class="navbar-text">{ parent.nickname } &middot; ghetto status 
                 <span class=" text-{success: connected, danger: !connected}">
-                    { (connected) ? 'ONLINE' : 'OFFLINE' }
+                    <i class="fa fa-thumbs-{up: connected, down: !connected}"></i>
                 </span>
             </p>
         </div>
       </div>
     </nav>
+
+    <style scoped>
+        .navbar-inverse {
+            background-color: hsla(0, 0%, 0%, 0.7);
+        }
+    </style>
 
     this.connected = false;
     this.reconnecting = false;
@@ -44,13 +50,13 @@
             position: fixed;
             top: 10vh;
             left: 50%;
-            z-index: 11;
+            z-index: 1001;
             margin-left: -150px;
             width: 300px;
         }
 
         .overlay {
-            z-index: 10;
+            z-index: 1000;
             background-color: rgba(0, 0, 0, 0.5);
             position: fixed;
             top: 0;
@@ -68,9 +74,9 @@
 <chat>
     <status></status>
     <welcome if={ !nickname }></welcome>
-    <div class="container-fluid" if={ nickname }>
+    <div class="container-fluid content" if={ nickname }>
         <div class="row">
-            <div class="col-xs-10 col-lg-11">
+            <div class="col-xs-10 col-lg-10">
                 <ul class="nav nav-tabs" role="tablist">
                     <li each={ room, i in rooms }
                         role="presentation"
@@ -84,7 +90,7 @@
                         </a>
                     </li>
                 </ul>
-                <div class="tab-content">
+                <div class="tab-content blueglass shadow">
                     <div each={ room, i in rooms }
                          class="tab-pane { active: room == parent.activeRoom } chat"
                          id={ room }>
@@ -97,7 +103,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-2 col-lg-1">
+
+            <div class="col-xs-2 col-lg-2 blueglass shadow">
                 <h5>Users</h5>
                 <ul class="list-unstyled" style="font-size: 0.9em">
                     <li each={ member, i in roomMembers[activeRoom] }>
@@ -106,36 +113,127 @@
                 </ul>
             </div>
         </div>
-        <textarea class="form-control" id="content"
+    </div>
+    <div class="footer">
+         <textarea class="dark shadow form-control" id="content"
             placeholder="Type message, press Enter to submit"
             onkeyup={ prepsubmit }
-            disabled={ !tags.status.connected }
-            required></textarea>
-    </div>
+            disabled={ !isConnected() }
+            required></textarea>  
+    </div> 
 
     <style scoped>
+        .content {
+            position: fixed;
+            top: 65;
+            bottom: 100;
+            left: 0;
+            right: 0;
+            z-index: 50;
+        }
+
         .chat {
-            height: 68vmin;
+            max-height: 90%;
             overflow-y: scroll;
             margin-bottom: 10px;
             padding: 2px 10px;
-            border-bottom: 1px solid #ddd;
-            border-left: 1px solid #ddd;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            height: 100px;
+            z-index: 50;
+        }
+
+        .nav-tabs {
+            border: 0;
+        }
+
+        .nav-tabs > li {
+            margin-bottom: 0;
+            border: 0;
+            border-radius: 0;
+            background-color: 
+        }
+
+        .nav-tabs > li > a {
+            border: 0;
+            border-radius: 0;
+            background: hsla(0, 0%, 100%, 0.1);
+        }
+
+        .nav-tabs > li:hover > a {
+            border: 0;
+            border-radius: 0;
+            background-color: hsla(232, 36%, 30%, 0.5);
+        }
+
+        .nav-tabs > li.active > a {
+            background-color: hsla(232, 36%, 30%, 0.61);
+            color: #ccc;
+            border: 0;
+            border-radius: 0;
+        }
+
+        .nav-tabs > li.active:hover > a,
+        .nav-tabs > li.active > a:focus {
+            background-color: hsla(232, 36%, 30%, 0.61);
+            color: #eee;
+            border: 0;
+        }
+
+        .dark {
+            background: hsla(0, 0%, 0%, 0.6);
+            color: #eee;
+            border: 0;
+        }
+
+        .darkish {
+            background: hsla(0, 0%, 20%, 0.6);
+            color: #eee;
+            border: 0;
+        }
+
+        .blueglass {
+            background-color: hsla(232, 36%, 30%, 0.61);
+            color: #ddd;
+            border: 0;
+        }
+
+        .bright {
+            background: hsla(0, 0%, 100%, 0.75);
+            color: #111;
+            border: 0;
+        }
+
+        .form-control {
+            border-radius: 0;
+        }
+
+        .shadow {
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25);
         }
 
         .chat > p {
-            line-height: 1.4em;
-            font-size: 14px;
+            line-height: 1.5em;
+            font-size: 13px;
             margin: 0;
         }
 
         textarea.form-control {
-            height: 13vh;
+            height: 100%;
         }
 
         .nav > li > a {
             font-size: 0.9em;
             padding: 6px 8px;
+        }
+        
+        .text-muted {
+            color: #999;
         }
     </style>
 
@@ -190,7 +288,7 @@
         }
     }
 
-    this.signalTyping = _.debounce(this._signalTyping, 200, true);
+    this.signalTyping = _.debounce(this._signalTyping, 500, true);
 
     prepsubmit(e) {
         if (e.which === 13 && !e.shiftKey) {
@@ -210,9 +308,15 @@
         });
         this.update();
         if (doScroll) {
-            var dom = this[this.activeRoom];
-            dom.scrollTop = dom.scrollHeight * 3;
+            this.scrollBottom();
         }
+    }
+
+    scrollBottom() {
+        _.delay(function() {
+            var dom = that[that.activeRoom];
+            dom.scrollTop = dom.scrollHeight;
+        }, 150);
     }
 
     join(e) {
@@ -241,12 +345,11 @@
                     that.messages[message.room] = group;
                 }
                 oneMessageInCurrentWindow |= (room === that.activeRoom);
-                group.push(message);
+                group.push(message);                
             });
             that.update();
             if (oneMessageInCurrentWindow) {
-                var dom = that[that.activeRoom];
-                dom.scrollTop = dom.scrollHeight * 3;
+                that.scrollBottom();
             }
         });
 
@@ -292,15 +395,17 @@
                 });
             }
             that.tags.status.update({connected: true, reconnecting: false});
+            that.update();
         });
 
         this.socket.on("disconnect", function() {
             that.tags.status.update({connected: false, reconnecting: true});
+            that.update();
         })
 
         $('a[data-toggle="tab"]').on("shown.bs.tab", function(e) {
             that.activeTab = e.target.getAttribute('id');
-            e.target.scrollTop = e.target.scrollHeight;
+            that.scrollBottom();
         });
     })
 </chat>
@@ -320,7 +425,8 @@ function linkify(m) {
     if (chk.startsWith("http://") || chk.startsWith("https://")) {
         l = '<a href="' + chk + '">' + chk + '</a>';
         if (chk.endsWith(".jpg") || chk.endsWith(".gif") || chk.endsWith(".png")) {
-            l = '<img src="' + chk + '" />';
+            l = '<a href="' + chk + '" data-featherlight="image">' + 
+                    '<img src="' + chk + '" style="max-width: 256px; max-height: 192px;" />' + '</a>';
         }
         // Youtube embed
         if ((chk.indexOf("youtube") > 0 && chk.indexOf("watch") > 0) ||
@@ -341,9 +447,9 @@ function strip(html) {
 }
 
 function colorize(text) {
-    var hash = text.hashCode() + text.length * 4;
-    var hsl = "color: hsl(" + hash + ", 80%, 40%)";
-    return '<span style="' + hsl + '">' + text + '</span>';
+    var hash = text.hashCode() + text.length;
+    var hsl = "color: hsl(" + hash + ", 65%, 75%)";
+    return '<strong><span style="' + hsl + '; text-shadow: 0 1px 1px #000;">' + text + '</span></strong>';
 }
 
 String.prototype.hashCode = function() {

@@ -4,15 +4,31 @@
         <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.3.0/animate.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/featherlight/1.3.2/featherlight.min.css">
+
         <link href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA6OjoAKWFLADpxnwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEREREREREAAREREREREQABERERERERIiIiIiIiIREyIiIiIiIhETMiIiIiIiERMzEREREiIREzMRERESIhETMxERIiIiERMzEREiIiIREzMRERERERETMxERERERERMzEREREREREzMzMzMzMwADMzMzMzMzAAMzMzMzMzMADgAAAA4AAAAOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcAAAAHAAAABwAA" rel="icon" type="image/x-icon" />
         <style>
             @import url(http://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700,900);
             body {
                 font-family: 'Roboto', sans-serif;
+                overflow: hidden;
+            }
+
+            .background {
+                position: absolute;
+                top: -15px;
+                left: -15px;
+                right: -15px;
+                bottom: -15px;
+                background-image: url('http://www.dorkatoriumgames.com/wp-content/uploads/2014/09/456498.jpg');
+                z-index: 5;
+                -webkit-filter: blur(10px);
+                filter: blur(10px);
             }
         </style>
     </head>
     <body>
+        <div class="background"></div>
         <chat></chat>
 
         <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -21,6 +37,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/riot/2.1.0/riot+compiler.min.js" type="text/javascript" charset="utf-8"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/featherlight/1.3.2/featherlight.min.js"></script>
 
         <script type="riot/tag" src="/js/chat.js"></script>
         <script type="riot/tag" src="/js/notify.js"></script>
